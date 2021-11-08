@@ -24,28 +24,26 @@ int sinoscope_opencl_init(sinoscope_opencl_t* opencl, cl_device_id opencl_device
     cl_platform_id platform;
 
     
-    error = clGetPlatformID(&platform);
-    if (error != CL_SUCCESS) { ErrorExit(error); }
-    error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &opencl_device_id, NULL);
-    if (error != CL_SUCCESS) { ErrorExit(error); }
+    error = clGetPlatformIDs(1,&platform,NULL);
+    // if (error != CL_SUCCESS) { ErrorExit(error); }
     opencl->context = clCreateContext(0, 1, &opencl_device_id, NULL, NULL, &error);   
-    if (error != CL_SUCCESS) { ErrorExit(error); }
+    //if (error != CL_SUCCESS) { ErrorExit(error); }
     opencl->queue = clCreateCommandQueue(opencl->context, opencl_device_id, 0, &error);
-    if (error != CL_SUCCESS) { ErrorExit(error); }
+    //if (error != CL_SUCCESS) { ErrorExit(error); }
 
 
-    opencl->BUFFER = clCreateBuffer(opencl->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, width*height*3, NULL,  &error);
+    opencl->buffer = clCreateBuffer(opencl->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, width*height*3, NULL,  &error);
 
     size_t size;
     const char* src;
     error = opencl_load_kernel_code(&src, &size);
-    if(error != CL_SUCCESS) { ErrorExit(error); }
+    //if(error != CL_SUCCESS) { ErrorExit(error); }
 
     cl_program pgm = clCreateProgramWithSource(opencl->context, 1, &src,&size, &error);
-    if(error != CL_SUCCESS) { ErrorExit(error); }
+   // if(error != CL_SUCCESS) { ErrorExit(error); }
 
     error = clBuildProgram(pgm, 1, &opencl_device_id, NULL, NULL, NULL);
-    if(error != CL_SUCCESS) { ErrorExit(error); }
+    //if(error != CL_SUCCESS) { ErrorExit(error); }
 
     char* bld_info;
     clGetProgramBuildInfo(pgm, opencl_device_id, CL_PROGRAM_BUILD_LOG,0, NULL, &size);
@@ -56,7 +54,7 @@ int sinoscope_opencl_init(sinoscope_opencl_t* opencl, cl_device_id opencl_device
     clGetProgramBuildInfo(pgm, opencl_device_id, CL_PROGRAM_BUILD_LOG,size, bld_info, NULL);
 
     opencl->kernel = clCreateKernel(pgm,"sinoscope-opencl",&error);
-    if(error != CL_SUCCESS) { ErrorExit(error); }
+    //if(error != CL_SUCCESS) { ErrorExit(error); }
 
     
 
@@ -119,19 +117,19 @@ int sinoscope_image_opencl(sinoscope_t* sinoscope) {
 	error |= clSetKernelArg(sinoscope->opencl->kernel, 9, sizeof(float), &(sinoscope->dx));
 	error |= clSetKernelArg(sinoscope->opencl->kernel, 10, sizeof(float), &(sinoscope->dy));
     
-    if(error != CL_SUCCESS) { ErrorExit(error); }
+    //if(error != CL_SUCCESS) { ErrorExit(error); }
 
     const size_t wg_size = 0; // ??
     const size_t total_size = {(size_t) sinoscope->width, (size_t) sinoscope->height};
 
     error = clEnqueueNDRangeKernel(sinoscope->opencl->queue, sinoscope->opencl->kernel, 1, NULL, &total_size, &wg_size, 0, NULL, NULL);
-    if(error != CL_SUCCESS) { ErrorExit(error); }
+    //if(error != CL_SUCCESS) { ErrorExit(error); }
 
     error = clFinish(sinoscope->opencl->queue);
-    if(error != CL_SUCCESS) { ErrorExit(error); }
+   // if(error != CL_SUCCESS) { ErrorExit(error); }
 
     error = clEnqueueReadBuffer(sinoscope->opencl->kernel, sinoscope->opencl->buffer, CL_TRUE, 0, sinoscope->buffer_size, sinoscope->buffer, 0, NULL, NULL);
-    if(error != CL_SUCCESS) { ErrorExit(error); }
+   // if(error != CL_SUCCESS) { ErrorExit(error); }
 
     return error;
 
