@@ -23,14 +23,12 @@ int sinoscope_opencl_init(sinoscope_opencl_t* opencl, cl_device_id opencl_device
     cl_int error = 0;
     cl_platform_id platform;
 
-    // printf("device id : %d\n", opencl_device_id);
-
     
     error = clGetPlatformIDs(1,&platform,NULL);
     if(error != CL_SUCCESS) { printf("Error getting platform ID\n"); return error;}
     opencl->context = clCreateContext(0, 1, &opencl_device_id, NULL, NULL, &error);   
     if(error != CL_SUCCESS) { printf("Error creating context\n"); return error;}
-    opencl->queue = clCreateCommandQueue(opencl->context, opencl_device_id, 0, &error);
+    opencl->queue = clCreateCommandQueueWithProperties(opencl->context, opencl_device_id, 0, &error);
     if(error != CL_SUCCESS) { printf("Error creating command Queue\n"); return error;}
 
 
@@ -40,37 +38,21 @@ int sinoscope_opencl_init(sinoscope_opencl_t* opencl, cl_device_id opencl_device
     char* src;
     error = opencl_load_kernel_code(&src, &size);
     if(error != CL_SUCCESS || src ==NULL) { printf("Error Loading Kernel\n"); goto fail_free_src;}
-    // printf("%d\n", *src);
 
     cl_program pgm = clCreateProgramWithSource(opencl->context, 1, (const char **) &src,&size, &error);
     if(error != CL_SUCCESS) { printf("Error Creating Program\n"); goto fail_free_src;}
 
-    error = clBuildProgram(pgm, 1, &opencl_device_id, NULL, NULL, NULL);
-    if(error != CL_SUCCESS) { printf("Error %d: Building Program\n", error); goto fail_free_src;}
+    error = clBuildProgram(pgm, 1, &opencl_device_id, "-I " __OPENCL_INCLUDE__, NULL, NULL);
+    if(error != CL_SUCCESS) { printf("Error %d while Building Program\n", error); 
+        opencl_print_build_log(pgm, opencl_device_id);
+        goto fail_free_src;
+    }
 
-    char* bld_info;
-    clGetProgramBuildInfo(pgm, opencl_device_id, CL_PROGRAM_BUILD_LOG,0, NULL, &size);
+    opencl->kernel = clCreateKernel(pgm,"sinoscope_kernel",&error);
+    if(error != CL_SUCCESS) { printf("Error %d while Creating Kernel\n", error); goto fail_free_src;}
 
-    // bld_info = new char[size+1]; bld_info[size] = '\0';
-    bld_info = malloc((size+1) * sizeof(*bld_info)); 
-    bld_info[size] = '\0';
-    clGetProgramBuildInfo(pgm, opencl_device_id, CL_PROGRAM_BUILD_LOG,size, bld_info, NULL);
-
-    opencl->kernel = clCreateKernel(pgm,"sinoscope-opencl",&error);
-    if(error != CL_SUCCESS) { printf("Error Creating Kernel\n"); goto fail_free_info;}
-
-    
-
-    free(src);
-    free(bld_info);
-    return error;
-
-
-fail_free_info:
-    free(bld_info);
 fail_free_src:
     free(src);
-fail_exit:
     return error;
 
 }
@@ -132,16 +114,16 @@ int sinoscope_image_opencl(sinoscope_t* sinoscope) {
     
     if(error != CL_SUCCESS) { printf("Error Setting Kernel Args\n"); return error;}
 
-    const size_t wg_size = 0; // ??
-    const size_t total_size = {(size_t) sinoscope->width, (size_t) sinoscope->height};
+    // const size_t wg_size = (size_t) sinoscope->width;
+    const size_t total_size = sinoscope->width;
 
-    error = clEnqueueNDRangeKernel(sinoscope->opencl->queue, sinoscope->opencl->kernel, 1, NULL, &total_size, &wg_size, 0, NULL, NULL);
-    if(error != CL_SUCCESS) { printf("Error Enqueuing NDR Range Kernel\n"); return error;}
+    error = clEnqueueNDRangeKernel(sinoscope->opencl->queue, sinoscope->opencl->kernel, 1, NULL, &total_size, NULL, 0, NULL, NULL);
+    if(error != CL_SUCCESS) { printf("Error : %d while Enqueuing NDR Range Kernel\n", error); return error;}
 
     error = clFinish(sinoscope->opencl->queue);
     if(error != CL_SUCCESS) { printf("Error Waiting for Queue Finish\n"); return error;}
 
-    error = clEnqueueReadBuffer(sinoscope->opencl->kernel, sinoscope->opencl->buffer, CL_TRUE, 0, sinoscope->buffer_size, sinoscope->buffer, 0, NULL, NULL);
+    error = clEnqueueReadBuffer(sinoscope->opencl->queue, sinoscope->opencl->buffer, CL_TRUE, 0, sinoscope->buffer_size, sinoscope->buffer, 0, NULL, NULL);
     if(error != CL_SUCCESS) { printf("Error Enqueueing Read Buffer\n"); return error;}
 
     return error;
