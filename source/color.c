@@ -16,7 +16,7 @@ unsigned int color_get_interval(float max) {
 float color_get_interval_inverse(float max) {
     return 1.0 / color_get_interval(max);
 }
-# pragma omp declare simd
+
 void color_value(pixel_t* pixel, float value, int interval, float interval_inverse) {
     if (isnan(value)) {
         *pixel = pixel_black;
@@ -33,7 +33,7 @@ void color_value(pixel_t* pixel, float value, int interval, float interval_inver
         pixel->bytes[2] = 255;
         break;
     case 1:
-        pixel->bytes[0] = 0;
+       pixel->bytes[0] = 0;
         pixel->bytes[1] = 255;
         pixel->bytes[2] = 255 - x;
         break;
@@ -53,7 +53,7 @@ void color_value(pixel_t* pixel, float value, int interval, float interval_inver
         pixel->bytes[2] = x;
         break;
     default:
-        *pixel = pixel_white;
+          *pixel= pixel_white;
         break;
     }
 

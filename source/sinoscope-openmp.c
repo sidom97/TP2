@@ -27,7 +27,7 @@ int sinoscope_image_openmp(sinoscope_t* sinoscope) {
     pixel_t pixel;
     int index=0;
 
-   #pragma omp parallel for simd ordered schedule(dynamic) firstprivate(sinoscope,index,pixel,px,py,value,taylor,width,interval_inverse,phase1,phase0,time,interval,height,dx,dy)
+   #pragma omp parallel for simd schedule(dynamic) firstprivate(sinoscope,index,pixel,px,py,value,taylor,width,interval_inverse,phase1,phase0,time,interval,height,dx,dy)
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
              px    = dx * j - 2 * M_PI;
@@ -45,11 +45,8 @@ int sinoscope_image_openmp(sinoscope_t* sinoscope) {
             color_value(&pixel, value, interval, interval_inverse);
             index = (i * 3) + (j * 3) * width;
             
-            #pragma omp  ordered simd
             sinoscope->buffer[index + 0] = pixel.bytes[0];
-            #pragma omp  ordered simd
             sinoscope->buffer[index + 1] = pixel.bytes[1];
-            #pragma omp  ordered simd
             sinoscope->buffer[index + 2] = pixel.bytes[2];
         }
     }
