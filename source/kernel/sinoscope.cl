@@ -10,15 +10,13 @@
  * Utilisez l'attribut `__attribute__((packed))` à vos déclarations.
  */
 
-typedef struct sinoscope sinoscope_t;
-typedef int (*sinoscope_handler)(sinoscope_t* sinoscope);
 /*
  * TODO
  *
  * Modifiez les paramètres du noyau avec ceux demandés par votre énoncé.
  */
 
-__kernel void sinoscope_kernel(__global unsigned char* buffer,  const int width, const int height, const int taylor, const int interval, const float interval_inverse, const float time, const float max,const float phase0, const float phase1, const float dx, const float dy) {
+__kernel void sinoscope_kernel(__global unsigned char* buffer,  const int width, const int height, const int taylor, const int interval, const float interval_inverse, const float time, const float max, const float phase0, const float phase1, const float dx, const float dy) {
     /*
      * TODO
      *
@@ -28,7 +26,7 @@ __kernel void sinoscope_kernel(__global unsigned char* buffer,  const int width,
      */
 
     int i = get_global_id(0);
-	// int y = get_global_id(1);
+	// int j = get_global_id(1);
     for (int j = 0; j < height; j++) {
 
         float px = dx * j - 2 * M_PI;

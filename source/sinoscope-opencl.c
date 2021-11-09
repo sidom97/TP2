@@ -23,7 +23,6 @@ int sinoscope_opencl_init(sinoscope_opencl_t* opencl, cl_device_id opencl_device
     cl_int error = 0;
     cl_platform_id platform;
 
-    
     error = clGetPlatformIDs(1,&platform,NULL);
     if(error != CL_SUCCESS) { printf("Error getting platform ID\n"); return error;}
     opencl->context = clCreateContext(0, 1, &opencl_device_id, NULL, NULL, &error);   
@@ -107,21 +106,25 @@ int sinoscope_image_opencl(sinoscope_t* sinoscope) {
 	error |= clSetKernelArg(sinoscope->opencl->kernel, 4, sizeof(int), &(sinoscope->interval));
 	error |= clSetKernelArg(sinoscope->opencl->kernel, 5, sizeof(float), &(sinoscope->interval_inverse));
 	error |= clSetKernelArg(sinoscope->opencl->kernel, 6, sizeof(float), &(sinoscope->time));
-	error |= clSetKernelArg(sinoscope->opencl->kernel, 7, sizeof(float), &(sinoscope->phase0));
-	error |= clSetKernelArg(sinoscope->opencl->kernel, 8, sizeof(float), &(sinoscope->phase1));
-	error |= clSetKernelArg(sinoscope->opencl->kernel, 9, sizeof(float), &(sinoscope->dx));
-	error |= clSetKernelArg(sinoscope->opencl->kernel, 10, sizeof(float), &(sinoscope->dy));
+    error |= clSetKernelArg(sinoscope->opencl->kernel, 7, sizeof(float), &(sinoscope->max));
+	error |= clSetKernelArg(sinoscope->opencl->kernel, 8, sizeof(float), &(sinoscope->phase0));
+	error |= clSetKernelArg(sinoscope->opencl->kernel, 9, sizeof(float), &(sinoscope->phase1));
+	error |= clSetKernelArg(sinoscope->opencl->kernel, 10, sizeof(float), &(sinoscope->dx));
+	error |= clSetKernelArg(sinoscope->opencl->kernel, 11, sizeof(float), &(sinoscope->dy));
     
     if(error != CL_SUCCESS) { printf("Error Setting Kernel Args\n"); return error;}
 
     // const size_t wg_size = (size_t) sinoscope->width;
-    const size_t total_size = sinoscope->width;
+    const size_t total_size = sinoscope->width; //One dimension enqueueing, total size is only the first dimension
 
     error = clEnqueueNDRangeKernel(sinoscope->opencl->queue, sinoscope->opencl->kernel, 1, NULL, &total_size, NULL, 0, NULL, NULL);
     if(error != CL_SUCCESS) { printf("Error : %d while Enqueuing NDR Range Kernel\n", error); return error;}
 
+    error = clFlush(sinoscope->opencl->queue);
+    if(error != CL_SUCCESS) { printf("Error : %d while Flushing Queue\n", error); return error;}
+
     error = clFinish(sinoscope->opencl->queue);
-    if(error != CL_SUCCESS) { printf("Error Waiting for Queue Finish\n"); return error;}
+    if(error != CL_SUCCESS) { printf("Error : %d while Waiting for Queue Finish\n", error); return error;}
 
     error = clEnqueueReadBuffer(sinoscope->opencl->queue, sinoscope->opencl->buffer, CL_TRUE, 0, sinoscope->buffer_size, sinoscope->buffer, 0, NULL, NULL);
     if(error != CL_SUCCESS) { printf("Error Enqueueing Read Buffer\n"); return error;}
