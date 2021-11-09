@@ -1,0 +1,7 @@
+/usagers2/jaroyb/Bureau/INF8601/TP2/TP2/build/CMakeFiles/edit_cache.dir
+/usagers2/jaroyb/Bureau/INF8601/TP2/TP2/build/CMakeFiles/check.dir
+/usagers2/jaroyb/Bureau/INF8601/TP2/TP2/build/CMakeFiles/handout.dir
+/usagers2/jaroyb/Bureau/INF8601/TP2/TP2/build/CMakeFiles/rebuild_cache.dir
+/usagers2/jaroyb/Bureau/INF8601/TP2/TP2/build/CMakeFiles/remise.dir
+/usagers2/jaroyb/Bureau/INF8601/TP2/TP2/build/CMakeFiles/format.dir
+/usagers2/jaroyb/Bureau/INF8601/TP2/TP2/build/CMakeFiles/sinoscope.dir
