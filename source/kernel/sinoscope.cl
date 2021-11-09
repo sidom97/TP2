@@ -25,9 +25,10 @@ __kernel void sinoscope_kernel(__global unsigned char* buffer,  const int width,
      * extérieures.
      */
 
-    int i = get_global_id(0);
+    int j = get_global_id(0) / width;
+    int i = get_global_id(0) - (width * j);
 	// int j = get_global_id(1);
-    for (int j = 0; j < height; j++) {
+    // for (int j = 0; j < height; j++) {
 
         float px = dx * j - 2 * M_PI;
         float py = dy * i - 2 * M_PI;
@@ -49,6 +50,6 @@ __kernel void sinoscope_kernel(__global unsigned char* buffer,  const int width,
             buffer[index + 0] = pixel.bytes[0];
             buffer[index + 1] = pixel.bytes[1];
             buffer[index + 2] = pixel.bytes[2];
-    }
+//    }
 	
 }

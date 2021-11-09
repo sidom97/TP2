@@ -21,17 +21,17 @@ int sinoscope_opencl_init(sinoscope_opencl_t* opencl, cl_device_id opencl_device
      * à propos de la compilation de votre noyau OpenCL.
      */
     cl_int error = 0;
-    cl_platform_id platform;
+    // cl_platform_id platform;
 
-    error = clGetPlatformIDs(1,&platform,NULL);
-    if(error != CL_SUCCESS) { printf("Error getting platform ID\n"); return error;}
+    // error = clGetPlatformIDs(1,&platform,NULL);
+    // if(error != CL_SUCCESS) { printf("Error getting platform ID\n"); return error;}
     opencl->context = clCreateContext(0, 1, &opencl_device_id, NULL, NULL, &error);   
     if(error != CL_SUCCESS) { printf("Error creating context\n"); return error;}
     opencl->queue = clCreateCommandQueueWithProperties(opencl->context, opencl_device_id, 0, &error);
     if(error != CL_SUCCESS) { printf("Error creating command Queue\n"); return error;}
 
 
-    opencl->buffer = clCreateBuffer(opencl->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, width*height*3, NULL,  &error);
+    opencl->buffer = clCreateBuffer(opencl->context, CL_MEM_WRITE_ONLY, width*height*3, NULL,  &error);
 
     size_t size = 0;
     char* src;
@@ -115,19 +115,18 @@ int sinoscope_image_opencl(sinoscope_t* sinoscope) {
     if(error != CL_SUCCESS) { printf("Error Setting Kernel Args\n"); return error;}
 
     // const size_t wg_size = (size_t) sinoscope->width;
-    const size_t total_size = sinoscope->width; //One dimension enqueueing, total size is only the first dimension
+    const size_t total_size = sinoscope->width * sinoscope->height; //One dimension enqueueing, total size is only the first dimension
 
     error = clEnqueueNDRangeKernel(sinoscope->opencl->queue, sinoscope->opencl->kernel, 1, NULL, &total_size, NULL, 0, NULL, NULL);
     if(error != CL_SUCCESS) { printf("Error : %d while Enqueuing NDR Range Kernel\n", error); return error;}
 
-    error = clFlush(sinoscope->opencl->queue);
-    if(error != CL_SUCCESS) { printf("Error : %d while Flushing Queue\n", error); return error;}
 
     error = clFinish(sinoscope->opencl->queue);
     if(error != CL_SUCCESS) { printf("Error : %d while Waiting for Queue Finish\n", error); return error;}
 
     error = clEnqueueReadBuffer(sinoscope->opencl->queue, sinoscope->opencl->buffer, CL_TRUE, 0, sinoscope->buffer_size, sinoscope->buffer, 0, NULL, NULL);
     if(error != CL_SUCCESS) { printf("Error Enqueueing Read Buffer\n"); return error;}
+
 
     return error;
 
